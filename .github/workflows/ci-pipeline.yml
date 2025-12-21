@@ -88,10 +88,10 @@ jobs:
       - name: Deploy
         run: |
           # Aplicamos los ficheros de la carpeta k8s
-          oc apply -f k8s/
+          oc apply -f deployment.yaml
           
           # Forzamos que el deployment se reinicie para coger la nueva imagen
-          oc rollout restart deployment/bootcamp-app
+          oc rollout restart deployment/taylinn-dev
           
           # Esperamos a que el despliegue termine con éxito
-          oc rollout status deployment/bootcamp-app
+          oc rollout status deployment/taylinn-dev
