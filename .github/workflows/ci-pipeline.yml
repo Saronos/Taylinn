@@ -34,6 +34,37 @@ jobs:
 
   # --- FASE 2: EMPAQUETADO ---
   build-push:
+  deploy-to-openshift:
+    needs: build-and-push # Espera a que la imagen esté creada
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Instalamos la herramienta 'oc' en el servidor de GitHub
+      - name: Install oc
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: "4"
+
+      # Nos logueamos en el cluster
+      - name: Log in to OpenShift
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
+          # Importante: pon aquí el nombre del namespace donde está desplegando
+          namespace: tu_usuario-dev 
+
+      # Desplegamos forzando que coja la nueva imagen
+      - name: Deploy
+        run: |
+          # Aplicamos los cambios de configuración si los hubiera
+          oc apply -f k8s/
+          # Forzamos al deployment a bajar la nueva imagen recién creada
+          oc rollout restart deployment/bootcamp-app
+          # Esperamos a que termine para confirmar que ha ido bien
+          oc rollout status deployment/bootcamp-app
+  
     needs: quality-check
     if: github.event_name == 'push' # Solo si es un push (no en PRs)
     runs-on: ubuntu-latest
