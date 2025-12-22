@@ -82,7 +82,7 @@ jobs:
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
           # ¡IMPORTANTE!: Cambia esto por tu proyecto real (ej: taylinn)
           # Si no lo pones, intentará usar 'default' y fallará por permisos.
-          namespace: taylinn 
+          namespace: taylinn-dev
 
       # 3. Desplegamos
       - name: Deploy
