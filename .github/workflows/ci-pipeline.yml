@@ -80,9 +80,9 @@ jobs:
         with:
           openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
-          # ¡IMPORTANTE!: Cambia esto por tu proyecto real (ej: taylinn-dev)
+          # ¡IMPORTANTE!: Cambia esto por tu proyecto real (ej: taylinn)
           # Si no lo pones, intentará usar 'default' y fallará por permisos.
-          namespace: taylinn-dev 
+          namespace: taylinn 
 
       # 3. Desplegamos
       - name: Deploy
@@ -91,7 +91,7 @@ jobs:
           oc apply -f k8s/deployment.yaml
           
           # Forzamos que el deployment se reinicie para coger la nueva imagen
-          oc rollout restart deployment/taylinn-dev
+          oc rollout restart deployment/taylinn
           
           # Esperamos a que el despliegue termine con éxito
-          oc rollout status deployment/taylinn-dev
+          oc rollout status deployment/taylinn
