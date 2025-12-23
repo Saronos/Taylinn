@@ -5,7 +5,7 @@ metadata:
   labels:
     app: taylinn
 spec:
-  replicas: 3  # Empezamos con 1 pod
+  replicas: 1  # Empezamos con 1, el HPA lo subirá si hay tráfico
   selector:
     matchLabels:
       app: taylinn
@@ -16,23 +16,20 @@ spec:
     spec:
       containers:
       - name: python-app
-        # OJO: Aquí debe poner la dirección de SU imagen (ghcr.io/usuario/...)
         image: ghcr.io/saronos/taylinn:latest 
         ports:
         - containerPort: 5000
         imagePullPolicy: Always
-        # Health Checks (Vital para DevOps)
         livenessProbe:
           httpGet:
             path: /health
             port: 5000
           initialDelaySeconds: 5
           periodSeconds: 10
-
         resources: 
-           requests:
-            cpu: "100m" #Pide 10% de una CPU para arrancar 
+          requests:
+            cpu: "50m"      # Reserva el 5% de un núcleo
             memory: "64Mi"
-        limits: 
-            cpu: "500m" #No dejes usar más del 50% de una CPU
+          limits: 
+            cpu: "200m"     # No deja que pase del 20%
             memory: "256Mi"

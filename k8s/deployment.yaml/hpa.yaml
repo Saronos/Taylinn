@@ -15,4 +15,4 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 50 #Si pasa del 50% del uso -> Escala
+        averageUtilization: 20 # Si pasa del 20% de los 50m pedidos -> Escala
