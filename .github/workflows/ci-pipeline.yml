@@ -88,8 +88,8 @@ jobs:
       - name: Deploy
         run: |
           # Aplicamos los ficheros de la carpeta k8s
-          oc apply -f mi-chart/templates/deployment.yaml
-          
+          helm upgrade --install taylinn ./mi-chart
+
           # Forzamos que el deployment se reinicie para coger la nueva imagen
           oc rollout restart deployment/taylinn
           
