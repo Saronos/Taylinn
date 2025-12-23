@@ -5,7 +5,7 @@ metadata:
   labels:
     app: taylinn
 spec:
-  replicas: 1  # Empezamos con 1, el HPA lo subirá si hay tráfico
+  replicas: {{ .Values.replicaCount }}  # Empezamos con 1, el HPA lo subirá si hay tráfico
   selector:
     matchLabels:
       app: taylinn
