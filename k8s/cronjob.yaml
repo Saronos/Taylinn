@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: limpieza-nocturna
+spec:
+  schedule: “*/1 * * * *” # (Para probar: Se ejecuta CADA MINUTO)
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: limpiador
+            image: busybox # Una imagen muy ligera
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - date; echo “Limpiando logs viejos... ¡Hecho!”;
+          restartPolicy: OnFailure
