@@ -1,26 +1,17 @@
-deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: redhat-actions/oc-login@v1
-        with: # ... credenciales ...
+name: DevOps Master - 2 Environments (Sandbox)
 
-      # --- REGLA 1: Si es un push a la rama 'develop', va a DEV ---
-      - name: Deploy to Dev
-        if: github.ref == 'refs/heads/develop'
-        run: |
-          helm upgrade --install bootcamp-dev ./mi-chart \name: DevOps Master - Multi-Environment Pipeline
-
+# 1. DISPARADORES (Cuándo se ejecuta esto)
 on:
   push:
-    branches: [ "main", "develop" ]
-    tags: [ "v*" ] # Se dispara con v1.0, v2.1.0, etc.
+    branches: [ "main", "develop" ] # Ramas que van a DEV
+    tags: [ "v*" ]                   # Tags (v1.0) que van a PRO (Stage)
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: # Botón manual
 
+# 2. TRABAJOS (Jobs)
 jobs:
-  # --- FASE 1: CI & BUILD (Se ejecuta siempre para validar el cambio) ---
+  # --- FASE 1: CI & BUILD (Construir imagen) ---
   ci-and-build:
     runs-on: ubuntu-latest
     permissions:
@@ -31,22 +22,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Tests
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
       - name: Tests & Coverage
         run: |
           pip install -r requirements.txt
           pytest --cov=app --cov-report=xml test_app.py
 
+      # SonarCloud
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      # Login en GitHub Registry
       - name: Log in to GitHub Registry
         uses: docker/login-action@v3
         with:
@@ -54,7 +47,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Generamos etiquetas inteligentes para la imagen Docker
+      # Generar etiquetas para Docker
       - name: Docker Meta
         id: meta
         uses: docker/metadata-action@v5
@@ -65,6 +58,7 @@ jobs:
             type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
+      # Construir y subir imagen
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
@@ -72,95 +66,60 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
-  # --- FASE 2: DESPLIEGUE EN DESARROLLO (Rama: develop) ---
+  # --- FASE 2: DESPLIEGUE A DEV (Proyecto taylinn-dev) ---
+  # Se ejecuta si hacemos push a 'main' o 'develop'
   deploy-dev:
     needs: ci-and-build
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
-    environment: development # Vincula este job al entorno 'development' de GitHub
+    environment: development
     steps:
       - uses: actions/checkout@v4
+      
       - name: Install oc
         uses: redhat-actions/openshift-tools-installer@v1
         with: { oc: "4" }
 
-      - name: Log in to OpenShift Dev
+      - name: Log in to OpenShift
         uses: redhat-actions/oc-login@v1
         with:
           openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
-          namespace: taylinn-dev
+          # OJO: Pon aquí tu proyecto real de desarrollo
+          namespace: taylinn-dev 
 
       - name: Helm Deploy Dev
         run: |
+          # Usamos values-dev.yaml
           helm upgrade --install bootcamp-dev ./mi-chart \
             -f ./mi-chart/values-dev.yaml
 
-  # --- FASE 3: DESPLIEGUE EN PRE-PRODUCCIÓN (Rama: main) ---
-  deploy-pre:
-    needs: ci-and-build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install oc
-        uses: redhat-actions/openshift-tools-installer@v1
-        with: { oc: "4" }
-
-      - name: Log in to OpenShift Pre
-        uses: redhat-actions/oc-login@v1
-        with:
-          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
-          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
-          namespace: taylinn-pre
-
-      - name: Helm Deploy Pre
-        run: |
-          helm upgrade --install bootcamp-pre ./mi-chart \
-            -f ./mi-chart/values-pre.yaml
-
-  # --- FASE 4: DESPLIEGUE EN PRODUCCIÓN (Tags: v*) ---
+  # --- FASE 3: DESPLIEGUE A PRO (Proyecto taylinn-stage) ---
+  # Se ejecuta SOLO si creas un TAG (ej: v1.0.0)
   deploy-pro:
     needs: ci-and-build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    environment: production # Aquí activaremos la "Aprobación Manual"
+    environment: production
     steps:
       - uses: actions/checkout@v4
+      
       - name: Install oc
         uses: redhat-actions/openshift-tools-installer@v1
         with: { oc: "4" }
 
-      - name: Log in to OpenShift Pro
+      - name: Log in to OpenShift
         uses: redhat-actions/oc-login@v1
         with:
-          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER_PRO || secrets.OPENSHIFT_SERVER }}
-          openshift_token: ${{ secrets.OPENSHIFT_TOKEN_PRO || secrets.OPENSHIFT_TOKEN }}
-          namespace: taylinn-pro
+          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
+          # OJO: Usamos el entorno 'stage' como si fuera PRO
+          namespace: taylinn-stage
 
       - name: Helm Deploy Pro
         run: |
-          # En Pro usamos la versión del tag específica para mayor seguridad
+          # Usamos values-pro.yaml pero inyectando la versión del tag
           VERSION=${GITHUB_REF#refs/tags/}
           helm upgrade --install bootcamp-pro ./mi-chart \
             -f ./mi-chart/values-pro.yaml \
             --set image.tag=$VERSION
-            -f ./mi-chart/values-dev.yaml \
-            --namespace taylinn-dev
-
-      # --- REGLA 2: Si es un push a la rama 'main', va a PRE ---
-      - name: Deploy to Pre
-        if: github.ref == 'refs/heads/main'
-        run: |
-          helm upgrade --install bootcamp-pre ./mi-chart \
-            -f ./mi-chart/values-pre.yaml \
-            --namespace taylinn-pre
-
-      # --- REGLA 3: Si creamos un TAG (v1.x), va a PRO ---
-      - name: Deploy to Pro
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          helm upgrade --install bootcamp-pro ./mi-chart \
-            -f ./mi-chart/values-pro.yaml \
-            --namespace taylinn-pro
