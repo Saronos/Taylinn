@@ -1,35 +1,47 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: taylinn
+  # Usamos el nombre del Chart para que sea dinámico
+  name: {{ .Chart.Name }}
   labels:
-    app: taylinn
+    app: {{ .Chart.Name }}
 spec:
-  replicas: {{ .Values.replicaCount }}  # Empezamos con 1, el HPA lo subirá si hay tráfico
+  # Lee la cantidad de réplicas del values-xxx.yaml (1 en Dev, 3 en Pro)
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: taylinn
+      app: {{ .Chart.Name }}
   template:
     metadata:
       labels:
-        app: taylinn
+        app: {{ .Chart.Name }}
     spec:
       containers:
-      - name: python-app
-        image: ghcr.io/saronos/taylinn:latest 
+      - name: {{ .Chart.Name }}
+        # Construye la imagen uniendo repositorio + : + tag
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        # En Dev suele ser Always, en Pro IfNotPresent
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 5000
-        imagePullPolicy: Always
+        
+        # Inyectamos las variables de entorno para que la App sepa dónde está
+        env:
+        - name: MODO
+          value: {{ .Values.env.modo | quote }}
+        - name: VERSION
+          value: {{ .Values.env.version | quote }}
+        - name: COLOR_FONDO
+          value: {{ .Values.env.color_fondo | quote }}
+
+        # Liveness probe se queda igual (es buena práctica mantenerlo)
         livenessProbe:
           httpGet:
             path: /health
             port: 5000
           initialDelaySeconds: 5
           periodSeconds: 10
-        resources: 
-          requests:
-            cpu: "50m"      # Reserva el 5% de un núcleo
-            memory: "64Mi"
-          limits: 
-            cpu: "200m"     # No deja que pase del 20%
-            memory: "256Mi"
+        
+        # Bloque mágico: convierte todo el bloque 'resources' del yaml en configuración
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
