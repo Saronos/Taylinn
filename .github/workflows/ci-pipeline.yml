@@ -86,14 +86,14 @@ jobs:
           openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
           # OJO: Pon aquí tu proyecto real de desarrollo
-          namespace: taylinn-dev 
+          namespace: taylinn-dev
 
       - name: Helm Deploy Dev
         run: |
           # Usamos values-dev.yaml
-          helm upgrade --install bootcamp-dev ./mi-chart \
+          helm upgrade --install taylinn ./mi-chart \
             -f ./mi-chart/values-dev.yaml
-
+            
   # --- FASE 3: DESPLIEGUE A PRO (Proyecto taylinn-stage) ---
   # Se ejecuta SOLO si creas un TAG (ej: v1.0.0)
   deploy-pro:
