@@ -59,7 +59,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: nometiroeructostanseguidocochinotusi
-          run: echo "creo tal vez si tal vez noooo"
+        run: echo "creo tal vez si tal vez noooo"
 
       # Construir y subir imagen
       - name: Build and Push Image
