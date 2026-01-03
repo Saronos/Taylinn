@@ -37,7 +37,7 @@ spec:
         # Liveness probe se queda igual (es buena práctica mantenerlo)
         livenessProbe:
           httpGet:
-            path: /health
+            path: /dame error maldita sea hdpaaaaa
             port: 5000
           initialDelaySeconds: 5
           periodSeconds: 10
