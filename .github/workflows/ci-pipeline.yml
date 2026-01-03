@@ -3,7 +3,7 @@ name: DevOps Master - 2 Environments (Sandbox)
 # 1. DISPARADORES (Cuándo se ejecuta esto)
 on:
   push:
-    branches: [ "main", "develop" ] # Ramas que van a DEV
+    branches: [ "develop" ] # Ramas que van a DEV
     tags: [ "v*" ]                   # Tags (v1.0) que van a PRO (Stage)
   pull_request:
     branches: [ "main" ]
@@ -67,7 +67,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
 
   # --- FASE 2: DESPLIEGUE A DEV (Proyecto taylinn-dev) ---
-  # Se ejecuta si hacemos push a 'main' o 'develop'
+  # Se ejecuta si hacemos push a 'develop'
   deploy-dev:
     needs: ci-and-build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
@@ -91,9 +91,9 @@ jobs:
       - name: Helm Deploy Dev
         run: |
           # Usamos values-dev.yaml
-          helm upgrade --install bootcamp-dev ./mi-chart \
+          helm upgrade --install taylinn ./mi-chart \
             -f ./mi-chart/values-dev.yaml
-
+            
   # --- FASE 3: DESPLIEGUE A PRO (Proyecto taylinn-stage) ---
   # Se ejecuta SOLO si creas un TAG (ej: v1.0.0)
   deploy-pro:
