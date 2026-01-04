@@ -54,14 +54,13 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/taylinn
           tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+              type=ref,event=branch
+              type=semver,pattern={{version}}
+              type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      # Construir y subir imagen
       - name: nometiroeructostanseguidocochinotusi
         run: echo "creo tal vez si tal vez noooo"
-      
+
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
