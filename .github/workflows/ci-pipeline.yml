@@ -58,13 +58,15 @@ jobs:
             type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      # Construir y subir imagen
+      - name: nometiroeructostanseguidocochinotusi
+        run: echo "creo tal vez si tal vez noooo"
+
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }
 
   # --- FASE 2: DESPLIEGUE A DEV (Proyecto taylinn-dev) ---
   # Se ejecuta si hacemos push a 'develop'
@@ -86,7 +88,7 @@ jobs:
           openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
           # OJO: Pon aquí tu proyecto real de desarrollo
-          namespace: taylinn-dev 
+          namespace: taylinn-dev
 
       - name: Helm Deploy Dev
         run: |
