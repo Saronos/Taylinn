@@ -54,9 +54,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/taylinn
           tags: |
-              type=ref,event=branch
-              type=semver,pattern={{version}}
-              type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: nometiroeructostanseguidocochinotusi
         run: echo "creo tal vez si tal vez noooo"
@@ -66,7 +66,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }
 
   # --- FASE 2: DESPLIEGUE A DEV (Proyecto taylinn-dev) ---
   # Se ejecuta si hacemos push a 'develop'
